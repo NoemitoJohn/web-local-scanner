@@ -4,7 +4,7 @@ import { scanner, TScannerResponse } from "@/server/actions/scanner"
 import { ImageOff } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { useFormState } from "react-dom"
+import { ToastContainer, toast } from 'react-toastify';
 
 type TAttendanceHistory = {
   is_time_out: boolean | null; 
@@ -13,19 +13,14 @@ type TAttendanceHistory = {
   date_time_stamp: Date | null | string;
 }
 
-async function action(prevState : TScannerResponse, formData : FormData) {
-  const response = await scanner(formData)
-  if(response)
-    return response
-  return prevState
-}
-
 export default function Scanner() {
-  const [studentInfo, formAction] = useFormState(action, null)
+  // const [studentInfo, formAction] = useFormState(action, null)
+  const [studentInfo, setStudentInfo] = useState<TScannerResponse>()
   const [historyTimeIn, setHistoryTimeIn] = useState<TAttendanceHistory[]>();
   const [historyTimeOut, setHistoryTimeOut] = useState<TAttendanceHistory[]>();
   const inputScanRef = useRef<HTMLInputElement>(null)
-  
+  const [timer, setTimer] = useState<NodeJS.Timeout>()
+
   const handleBodyClick = () => { 
     if(inputScanRef.current) {
       inputScanRef.current.focus()
@@ -41,33 +36,46 @@ export default function Scanner() {
     document.body.addEventListener('click', handleBodyClick)
     
     return () => {
-      // document.body.removeEventListener('keydown', handleKeyDown);
       document.body.removeEventListener('click', handleBodyClick)
+      clearTimeout(timer)
     };
+    
+    
   }, []);
-
-  useEffect(() => {
-    if(!inputScanRef.current) return
-
-    if(studentInfo) {
-     const timeOut = studentInfo.history.filter((v) => v.is_time_out)
-     const timeIn = studentInfo.history.filter((v) => !v.is_time_out)
-     setHistoryTimeIn(timeIn)
-     setHistoryTimeOut(timeOut)
-     inputScanRef.current.value = ''
-    }
-  }, [studentInfo])
   
   const handleKeyDown = async (event : React.KeyboardEvent<HTMLInputElement>) => {
     
+    
+    
     if(!inputScanRef.current) return
-
+    
     if(event.key === 'Enter'){
+      clearTimeout(timer)
+      
       const formData = new FormData()
       
       formData.set('code', inputScanRef.current.value)
+
+      const result = await scanner(formData)
+
+      if(!result) { 
+        inputScanRef.current.value = ''
+        toast.error('No Stundent found', {autoClose: 1500}) 
+        return 
+      }
       
-      formAction(formData)
+      const timeOut = result.history.filter((v) => v.is_time_out)
+      const timeIn = result.history.filter((v) => !v.is_time_out)
+
+      setHistoryTimeIn(timeIn)
+      setHistoryTimeOut(timeOut)
+      
+      inputScanRef.current.value = ''
+
+      setStudentInfo(result)
+      setTimer(setTimeout(()=> {
+        setStudentInfo(null)
+      }, 1000 * 10))
     }
   }
   return (
@@ -76,7 +84,7 @@ export default function Scanner() {
     <div className='col-span-4 text-center text-4xl font-extrabold ' >GSC SPED INTEGRATED SCHOOL</div>
     <hr/>
     <div className='grid grid-cols-4 h-full mt-6 gap-4 pl-2 pr-2 '>
-          {!studentInfo && (
+        {!studentInfo && (
           <div className='col-span-4 flex justify-center'>
             <p className='text-2xl font-extrabold uppercase'>Scan your Qrcode</p>
           </div>
@@ -86,13 +94,13 @@ export default function Scanner() {
             <div className='col-start-1 row-span-4'>
               {studentInfo?.profile_url ? 
                 (   
-                  <div className="bg-red-400 w-full h-full relative">
+                  <div className="bg-zinc-600 w-full h-full relative">
                      <Image loader={(l) => l.src} src={studentInfo?.profile_url} alt="" fill  />
                   </div>
                 )
               :
                 (
-                  <div className='e bg-zinc-600 flex min-h-full justify-center items-center'>
+                  <div className=' bg-zinc-600 w-full h-full relative'>
                     <ImageOff className='text-white' size={60}/>
                   </div>
               )}
@@ -102,26 +110,26 @@ export default function Scanner() {
                 <div className='col-span-2 flex flex-col justify-end '>
                   <p className='text-2xl font-bold font-sans   text-slate-500 uppercase'>Full Name</p>
                 </div>
-                <div className='col-span-2  '>
-                  <p className='text-4xl   font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.full_name}</p>
+                <div className='col-span-2'>
+                  <p className='text-4xl font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.full_name}</p>
                 </div>
                 <div className='col-span-2 flex flex-col justify-end '>
                   <p className='text-2xl font-bold font-sans  text-slate-500 uppercase'>Grade Level</p>
                 </div>
-                <div className='col-span-2  '>
-                  <p className='text-4xl   font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.grade_level}</p>
+                <div className='col-span-2'>
+                  <p className='text-4xl font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.grade_level}</p>
                 </div>
                 <div className='col-span-2 flex flex-col justify-end '>
                   <p className='text-2xl font-bold font-sans   text-slate-500 uppercase'>Section</p>
                 </div>
-                <div className='col-span-2  '>
-                  <p className='text-4xl   font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.section_name}</p>
+                <div className='col-span-2'>
+                  <p className='text-4xl font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.section_name}</p>
                 </div>
                 <div className='col-span-2 flex flex-col justify-end '>
                   <p className='text-2xl font-bold font-sans   text-slate-500 uppercase'>School year</p>
                 </div>
-                <div className='col-span-2  '>
-                  <p className='text-4xl   font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.school_year}</p>
+                <div className='col-span-2'>
+                  <p className='text-4xl font-sans text-slate-900 font-extrabold uppercase'>{studentInfo?.school_year}</p>
                 </div>
               </div>
             </div>
@@ -148,7 +156,7 @@ export default function Scanner() {
                 </div>
               </div>
             </div>
-            {/* <div className='row-span-5 '>
+            {/*<div className='row-span-5 '>
               <div className='grid grid-cols-2 '>
                 <div >
                   <p className='text-2xl font-sans text-center text-slate-500  font-extrabold uppercase'>TIME IN</p>
@@ -171,7 +179,7 @@ export default function Scanner() {
           </>
         )}
       </div>
-      
+      <ToastContainer  />
     </>
   )
 }

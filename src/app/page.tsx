@@ -1,9 +1,8 @@
 import Scanner from '@/components/Scanner';
-import { scanner } from '@/server/actions/scanner';
 import { AppConfig, openConfigFile, updateConfigFile } from '@/server/config';
 import { init_local_data } from '@/server/data';
 import { unstable_noStore as noStore } from 'next/cache';
-
+import 'react-toastify/dist/ReactToastify.css';
 
 export default async function Home() {
   noStore()
@@ -17,6 +16,7 @@ export default async function Home() {
       }
     }
   } catch (error) {
+    console.log(error)
     return (
       <div>
         Initialization failed
