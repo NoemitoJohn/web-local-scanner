@@ -5,6 +5,7 @@ import { ImageOff } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { ToastContainer, toast } from 'react-toastify';
+import profile_placeholder from '@/app/assets/student.png'
 
 type TAttendanceHistory = {
   is_time_out: boolean | null; 
@@ -75,7 +76,7 @@ export default function Scanner() {
       setStudentInfo(result)
       setTimer(setTimeout(()=> {
         setStudentInfo(null)
-      }, 1000 * 10))
+      }, 1000 * 15))
     }
   }
   return (
@@ -100,8 +101,8 @@ export default function Scanner() {
                 )
               :
                 (
-                  <div className=' bg-zinc-600 w-full h-full relative'>
-                    <ImageOff className='text-white' size={60}/>
+                  <div className=' w-full h-full relative'>
+                    <Image alt="profile" src={profile_placeholder} fill />
                   </div>
               )}
             </div>

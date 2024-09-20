@@ -3,7 +3,7 @@ import { AppConfig, openConfigFile, updateConfigFile } from '@/server/config';
 import { init_local_data } from '@/server/data';
 import { unstable_noStore as noStore } from 'next/cache';
 import 'react-toastify/dist/ReactToastify.css';
-
+// import 'react-toastify/ReactToastify.css'
 export default async function Home() {
   noStore()
   try {

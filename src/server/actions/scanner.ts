@@ -164,7 +164,5 @@ export async function scanner(data: FormData) {
     profile_url: profile_url,
     history: [...attendanceHistory, addedAttendance]
   }
-
-  console.log(temp)
   return temp
 }
